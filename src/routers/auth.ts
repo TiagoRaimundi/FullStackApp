@@ -1,6 +1,7 @@
-import User from '#/utils/models/user';
+import User from '../models/user';
 import { Router, Request, Response, NextFunction } from 'express';
 import { CreateUser } from '#/@types/user';
+
 
 const router = Router();
 
