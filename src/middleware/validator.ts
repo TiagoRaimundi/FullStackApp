@@ -1,33 +1,30 @@
-import User from '../models/user';
-import { Router, Request, Response } from 'express';
-import { CreateUserSchema } from '../utils/validationSchema'; // Corrected import path
+import { RequestHandler } from "express"
+import * as yup from 'yup'
 
-const router = Router();
+export const validate = (schema: any): RequestHandler => {
 
-router.post("/create", async (req: Request, res: Response) => {
-    try {
-        // Destructure name, email, and password from the request body
-        const { name, email, password } = req.body;
+    return async (req, res, next) => {
+        if (!req.body) return res.status(400).json({
+            error:
+                "Empty body is not excepted!"
+        })
+        const schemaToValidate = yup.object({
+            body: schema,
 
-        // Validate the request body against the schema
-        // await is used to ensure that the Promise returned by validate is resolved
-        const validatedBody = await CreateUserSchema.validate({ name, email, password }, { abortEarly: false });
+        })
 
-        // If validation is successful, create the user
-        const user = await User.create(validatedBody);
-        
-        // Respond with the created user
-        res.status(201).json({ user });
-    } catch (error) {
-        if (error instanceof Yup.ValidationError) {
-            // Handle validation errors
-            return res.status(400).json({ errors: error.errors });
-        } else {
-            // Handle all other errors
-            console.error(error);
-            return res.status(500).json({ error: 'Internal Server Error' });
+        try {
+            await schemaToValidate.validate({
+                body: req.body
+            }, {
+                abortEarly: true,
+            })
+
+            next()
+        } catch (error) {
+            if(error instanceof yup.ValidationError){
+                res.status(400).json({error: error.message})
+            }
         }
     }
-});
-
-export default router;
+}
