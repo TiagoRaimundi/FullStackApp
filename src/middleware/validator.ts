@@ -1,36 +1,33 @@
-import { RequestHandler } from "express";
-import * as yup from 'yup';
+import User from '../models/user';
+import { Router, Request, Response } from 'express';
+import { CreateUserSchema } from '../utils/validationSchema'; // Corrected import path
 
-export const validate = (schema: yup.ObjectSchema<any>): RequestHandler => {
-  return async (req, res, next) => {
-    // Check if the body is not empty
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        error: "Empty body is not accepted!"
-      });
-    }
+const router = Router();
 
-    const schemaToValidate = yup.object({
-      body: schema,
-    });
-
+router.post("/create", async (req: Request, res: Response) => {
     try {
-      // Validate the req.body against the schema
-      await schemaToValidate.validate({
-        body: req.body
-      }, {
-        abortEarly: false, // Set to false to return all validation errors, not just the first one
-      });
+        // Destructure name, email, and password from the request body
+        const { name, email, password } = req.body;
 
-      next(); // If validation is successful, proceed to the next middleware
+        // Validate the request body against the schema
+        // await is used to ensure that the Promise returned by validate is resolved
+        const validatedBody = await CreateUserSchema.validate({ name, email, password }, { abortEarly: false });
+
+        // If validation is successful, create the user
+        const user = await User.create(validatedBody);
+        
+        // Respond with the created user
+        res.status(201).json({ user });
     } catch (error) {
-      // If validation fails, return the errors
-      if (error instanceof yup.ValidationError) {
-        return res.status(400).json({ errors: error.errors });
-      } else {
-        // If an unexpected error occurs, pass it to the error-handling middleware
-        next(error);
-      }
+        if (error instanceof Yup.ValidationError) {
+            // Handle validation errors
+            return res.status(400).json({ errors: error.errors });
+        } else {
+            // Handle all other errors
+            console.error(error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
-  };
-};
+});
+
+export default router;
