@@ -1,33 +1,20 @@
 import User from '../models/user';
 import { Router, Request, Response, NextFunction } from 'express';
+import { CreateUserSchema } from '../utils/validationSchema'; // Assuming this is where your schema is defined
 import { CreateUser } from '#/@types/user';
-
+import { validate } from '#/middleware/validator';
 
 const router = Router();
-
 router.post("/create",
-    (req: Request, res: Response, next: NextFunction) => {
-        const { name } = req.body;
-        
-        if (!name || !name.trim()) {
-            return res.status(400).json({ error: 'Name is missing!' });
-        }
-        
-        if (name.length < 3) {
-            return res.status(400).json({ error: 'Invalid name! Name should be at least 3 characters long.' });
-        }
-        
-        next();
-    },
-    async (req: Request & { body: CreateUser }, res: Response) => {
-        try {
-            const { email, password, name } = req.body;
-            const user = await User.create({ name, email, password });
-            res.status(201).json({ user }); // 201 means "Created"
-        } catch (error) {
-            res.status(500).json({ error: "There was an error creating the user." });
-        }
-    }
-);
+    
+    validate(CreateUserSchema),
+    async (req: CreateUser, res) => {
+        const { email, password, name } = req.body
+        CreateUserSchema.validate({ email, password, name }).catch(error => {
 
+        })
+        const user = await User.create({ name, email, password })
+        res.json({ user })
+
+    })
 export default router;
