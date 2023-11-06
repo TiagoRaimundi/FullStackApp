@@ -6,6 +6,7 @@ import User from '#/models/user';
 import EmailVerificationToken from '#/models/emailVerificationToken';
 import nodemailer from 'nodemailer'
 import { MAILTRAP_PASS, MAILTRAP_USER } from '#/utils/variables';
+import { generateTemplate } from '#/mail/template';
 
 export const create: RequestHandler = async (req: CreateUser, res) => {
     const {email,  password, name} = req.body
@@ -32,7 +33,9 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
     transport.sendMail({
         to: user.email,
         from: "auth@myapp",
-        html: `<h1 fontSize: 14>Your verification token is ${token}</h1>`
+        html: generateTemplate({
+          banner: ''
+        })
     })
     res.status(201).json({user})
 }
