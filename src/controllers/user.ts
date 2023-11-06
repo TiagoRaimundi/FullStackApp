@@ -24,11 +24,11 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
       });
 
     const token = generateToken() 
-    const verificationToken = await EmailVerificationToken.create({
+    await EmailVerificationToken.create({
         owner: user._id,
         token
     })
-
+   
     transport.sendMail({
         to: user.email,
         from: "auth@myapp",
