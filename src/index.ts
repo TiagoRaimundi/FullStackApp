@@ -1,6 +1,9 @@
 import express from 'express'
 import "dotenv/config"
 import './db/index'
+import path from 'path'
+
+console.log(path.join(__dirname, "../mail/logo.png" ))
 
 import authRouter from './routers/auth'
 

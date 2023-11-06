@@ -7,7 +7,7 @@ import EmailVerificationToken from '#/models/emailVerificationToken';
 import nodemailer from 'nodemailer'
 import { MAILTRAP_PASS, MAILTRAP_USER } from '#/utils/variables';
 import { generateTemplate } from '#/mail/template';
-
+import path from 'path'
 export const create: RequestHandler = async (req: CreateUser, res) => {
     const {email,  password, name} = req.body
 
@@ -29,13 +29,34 @@ export const create: RequestHandler = async (req: CreateUser, res) => {
         owner: user._id,
         token
     })
+    const WelcomeMessage = `Hi ${name}, Welcome to Podify!
+     There are so much thing that we do
+     for verified users. Use the given OTP to verify your email.`
    
     transport.sendMail({
         to: user.email,
+        subject: "Welcome Message",
         from: "auth@myapp",
         html: generateTemplate({
-          banner: ''
-        })
+          title: 'Welcome to podify',
+          message: WelcomeMessage,
+          logo: 'cid: logo',
+          banner: "cid:welcome",
+          link: "#",
+          btnTitle: token
+        }),
+        attachments: [
+          {
+            filename: 'logo.png',
+            path: path.join(__dirname, "../mail/logo.png" ),
+            cid: "logo",
+          },
+          {
+            filename: 'welcome.png',
+            path: path.join(__dirname, "../mail/welcome.png" ),
+            cid: "welcome",
+          }
+        ]
     })
     res.status(201).json({user})
 }
