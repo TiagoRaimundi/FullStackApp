@@ -1,7 +1,7 @@
 import { CreateUser, VerifyEmailRequest } from '#/@types/user';
 import { RequestHandler } from 'express';
 import User from '#/models/user';
-import { sendVerificationMail } from '#/utils/mail';
+import { sendForgetPasswordLink, sendVerificationMail } from '#/utils/mail';
 import { generateToken } from '#/utils/helpers';
 import EmailVerificationToken from '#/models/emailVerificationToken';
 import { isValidObjectId } from 'mongoose';
@@ -92,14 +92,23 @@ export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
     //generate the link
     //https://yourapp.com/reset-passwod?token=hfkshf4322hfjkds&userId=67jhfdsahf43
  
+await passwordResetToken.findOneAndDelete({
+    owner: user._id
+})
+
+
 const token = crypto.randomBytes(36).toString('hex')
-passwordResetToken.create({
+
+
+await passwordResetToken.create({
     owner: user._id,
     token
 })
 
 const resetLink = `${PASSWORD_RESET_LINK}?token=${token}$userId=${user._id}`
-res.json({resetLink})
+
+sendForgetPasswordLink({email: user.email, link: resetLink})
+res.json({message: "Check you registered mail."})
 
 
 };
