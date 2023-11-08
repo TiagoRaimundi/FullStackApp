@@ -1,52 +1,55 @@
-//interface (typescript)
-import { Model, ObjectId, Schema, model } from 'mongoose';
-import {hash, compare} from 'bcrypt'
+import { Document, Model, Schema, model } from 'mongoose';
+import { hash, compare } from 'bcrypt';
 
-interface EmailVerificationTokenDocument {
-    owner: ObjectId
-    token: string
-    createdAt: Date
+// Extendendo Document para incluir os métodos do esquema.
+interface EmailVerificationTokenDocument extends Document {
+    owner: Schema.Types.ObjectId;
+    token: string;
+    createdAt: Date;
 }
 
-interface Methods{
-    compareToken(token: string) : Promise<boolean>
+// Interface para os métodos de instância do documento.
+interface EmailVerificationTokenMethods {
+    compareToken(providedToken: string): Promise<boolean>;
 }
 
-const emailVerificationTokenSchema = new
-    Schema<EmailVerificationTokenDocument, {}, Methods>(
-        {
-            owner: {
-                type: Schema.Types.ObjectId,
-                required: true,
-                ref: "User"
-            },
-            token: {
-                type: String,
-                required: true,
-            },
-            createdAt: {
-                type: Date,
-                expires: 3600, //60 min = 3600s
-                default: Date.now()
-            }
+// Esquema para o token de verificação de e-mail.
+const emailVerificationTokenSchema = new Schema<EmailVerificationTokenDocument, Model<EmailVerificationTokenDocument>, EmailVerificationTokenMethods>(
+    {
+        owner: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: "User"
+        },
+        token: {
+            type: String,
+            required: true,
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now, // Alterado para ser uma referência à função
+            expires: 3600, // Token expira após 1 hora
         }
-
-    )
-emailVerificationTokenSchema.pre('save', async function(next){
-    //hash the token
-    if(this.isModified('token')){
-        this.token = await hash(this.token, 10)
     }
-    next()
-})
+);
 
-emailVerificationTokenSchema.methods.compareToken = async function (token) {
-    const result = await compare(token, this.token)  
-    return result  
-}
+// Middleware para pré-salvamento que hasheia o token.
+emailVerificationTokenSchema.pre<EmailVerificationTokenDocument>('save', async function (next) {
+    if (this.isModified('token')) {
+        this.token = await hash(this.token, 10);
+    }
+    next();
+});
 
+// Método para comparar o token fornecido com o token hash armazenado.
+emailVerificationTokenSchema.methods.compareToken = async function (providedToken: string): Promise<boolean> {
+    return compare(providedToken, this.token);
+};
 
-export default model(
+// Criação do modelo.
+const EmailVerificationTokenModel = model<EmailVerificationTokenDocument, Model<EmailVerificationTokenDocument, {}, EmailVerificationTokenMethods>>(
     "EmailVerificationToken",
     emailVerificationTokenSchema
-) as Model<EmailVerificationTokenDocument, {}, Methods>
+);
+
+export default EmailVerificationTokenModel;

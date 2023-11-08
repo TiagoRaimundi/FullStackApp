@@ -2,7 +2,7 @@ import { CreateUser } from '#/@types/user';
 import { RequestHandler } from 'express';
 import { generateToken } from '#/utils/helpers';
 import User from '#/models/user';
-import EmailVerificationToken from '#/models/emailVerificationToken';
+import emailVerificationToken from '#/models/emailVerificationToken';
 import nodemailer from 'nodemailer'
 import { MAILTRAP_PASS, MAILTRAP_USER, VERIFICATION_EMAIL } from '#/utils/variables';
 import { generateTemplate } from '#/mail/template';
@@ -33,10 +33,7 @@ const transport = generateMailTransporter()
 
 const {name, email, userId} = profile
 
-await EmailVerificationToken.create({
-    owner: userId,
-    token
-})
+
 const WelcomeMessage = `Hi ${name}, Welcome to Podify!
  There are so much thing that we do
  for verified users. Use the given OTP to verify your email.`
