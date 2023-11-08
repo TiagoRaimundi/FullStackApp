@@ -5,6 +5,11 @@ import { sendVerificationMail } from '#/utils/mail';
 import { generateToken } from '#/utils/helpers';
 import EmailVerificationToken from '#/models/emailVerificationToken';
 import { isValidObjectId } from 'mongoose';
+import passwordResetToken from '#/models/passwordResetToken';
+
+import crypto from 'crypto'
+import { PASSWORD_RESET_LINK } from '#/utils/variables';
+
 
 export const create: RequestHandler = async (req, res) => {
     const { email, password, name } = req.body;
@@ -86,10 +91,15 @@ export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
 
     //generate the link
     //https://yourapp.com/reset-passwod?token=hfkshf4322hfjkds&userId=67jhfdsahf43
+ 
+const token = crypto.randomBytes(36).toString('hex')
+passwordResetToken.create({
+    owner: user._id,
+    token
+})
 
-    
-
-
+const resetLink = `${PASSWORD_RESET_LINK}?token=${token}$userId=${user._id}`
+res.json({resetLink})
 
 
 };

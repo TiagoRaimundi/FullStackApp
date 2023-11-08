@@ -2,7 +2,7 @@ import User from '../models/user';
 import { Router, Request, Response } from 'express';
 import { CreateUserSchema, EmailVerificationBody } from '../utils/validationSchema';
 import { validate } from '#/middleware/validator';
-import { create, sendReVerificationToken, verifyEmail } from '#/controllers/user';
+import { create, generateForgetPasswordLink, sendReVerificationToken, verifyEmail } from '#/controllers/user';
 
 const router = Router()
 
