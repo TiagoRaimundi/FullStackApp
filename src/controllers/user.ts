@@ -86,29 +86,41 @@ export const sendReVerificationToken: RequestHandler = async (req, res) => {
 export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
     const { email } = req.body;
 
-    const user = await User.findOne({email})
-    if(!user) return res.status(403).json({error: 'Account not found!'})
+    const user = await User.findOne({ email });
+    if (!user) {
+        return res.status(404).json({ error: 'Account not found!' });
+    }
 
-    //generate the link
-    //https://yourapp.com/reset-passwod?token=hfkshf4322hfjkds&userId=67jhfdsahf43
- 
-await passwordResetToken.findOneAndDelete({
-    owner: user._id
-})
+    // Remover tokens de redefinição de senha antigos
+    await passwordResetToken.findOneAndDelete({ owner: user._id });
 
+    // Gerar um novo token
+    const token = crypto.randomBytes(36).toString('hex');
 
-const token = crypto.randomBytes(36).toString('hex')
+    // Criar um novo documento para o token de redefinição de senha
+    await passwordResetToken.create({ owner: user._id, token });
 
+    // Criar o link de redefinição de senha
+    const resetLink = `${PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}`;
 
-await passwordResetToken.create({
-    owner: user._id,
-    token
-})
+    // Enviar o link para o e-mail do usuário
+    sendForgetPasswordLink({ email: user.email, link: resetLink });
 
-const resetLink = `${PASSWORD_RESET_LINK}?token=${token}$userId=${user._id}`
+    res.json({ message: "Check your registered email to reset your password." });
+};
 
-sendForgetPasswordLink({email: user.email, link: resetLink})
-res.json({message: "Check you registered mail."})
+export const isValidPassResetToken: RequestHandler = async (req, res) => {
+    const { token, userId } = req.body;
 
+    const resetToken = await passwordResetToken.findOne({ owner: userId });
+    if (!resetToken) {
+        return res.status(403).json({ error: "Unauthorized access, invalid token!" });
+    }
 
+    const matched = await resetToken.compareToken(token);
+    if (!matched) {
+        return res.status(403).json({ error: "Unauthorized access, invalid token!" });
+    }
+
+    res.json({ message: "Your token is valid." });
 };

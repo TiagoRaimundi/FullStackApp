@@ -18,7 +18,7 @@ export const CreateUserSchema = yup.object().shape({
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, "Password is too simple!")
 }) 
 
-export const EmailVerificationBody = yup.object().shape({
+export const TokenAndIDValidation = yup.object().shape({
     token: yup.string().trim(). required("Invalid token!"),
     userId: yup
     .string()
@@ -31,3 +31,4 @@ export const EmailVerificationBody = yup.object().shape({
     })
     .required("Invalid userId!"),
 })
+
