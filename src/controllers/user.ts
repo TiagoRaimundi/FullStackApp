@@ -86,41 +86,33 @@ export const sendReVerificationToken: RequestHandler = async (req, res) => {
 export const generateForgetPasswordLink: RequestHandler = async (req, res) => {
     const { email } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-        return res.status(404).json({ error: 'Account not found!' });
+    try {
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ error: 'Account not found!' });
+        }
+
+        // Remove any existing password reset tokens for this user
+        await passwordResetToken.findOneAndDelete({ owner: user._id });
+
+        // Generate a new token
+        const token = crypto.randomBytes(36).toString('hex');
+
+        // Create a new password reset token in the database
+        await passwordResetToken.create({ owner: user._id, token });
+
+        // Generate the password reset link
+        const resetLink = `${PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}`;
+
+        // Send the password reset link to the user's email
+        await sendForgetPasswordLink({ email: user.email, link: resetLink });
+
+        res.json({ message: "Check your registered email to reset your password." });
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred while processing your request.' });
     }
-
-    // Remover tokens de redefinição de senha antigos
-    await passwordResetToken.findOneAndDelete({ owner: user._id });
-
-    // Gerar um novo token
-    const token = crypto.randomBytes(36).toString('hex');
-
-    // Criar um novo documento para o token de redefinição de senha
-    await passwordResetToken.create({ owner: user._id, token });
-
-    // Criar o link de redefinição de senha
-    const resetLink = `${PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}`;
-
-    // Enviar o link para o e-mail do usuário
-    sendForgetPasswordLink({ email: user.email, link: resetLink });
-
-    res.json({ message: "Check your registered email to reset your password." });
 };
 
-export const isValidPassResetToken: RequestHandler = async (req, res) => {
-    const { token, userId } = req.body;
-
-    const resetToken = await passwordResetToken.findOne({ owner: userId });
-    if (!resetToken) {
-        return res.status(403).json({ error: "Unauthorized access, invalid token!" });
-    }
-
-    const matched = await resetToken.compareToken(token);
-    if (!matched) {
-        return res.status(403).json({ error: "Unauthorized access, invalid token!" });
-    }
-
-    res.json({ message: "Your token is valid." });
+export const grantValid: RequestHandler = async (req, res) => {
+    res.json({ valid: true });
 };
