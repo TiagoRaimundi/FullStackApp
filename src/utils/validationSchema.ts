@@ -30,4 +30,20 @@ export const TokenAndIDValidation = yup.object().shape({
         .required("Invalid userId!")
         .test('is-mongo-object-id', 'Invalid userId!', value => value == null ? false : isValidObjectId(value))
 });
+export const updatePasswordSchema = yup.object().shape({
+    token: yup
+        .string()
+        .trim()
+        .required("Invalid token!"),
+    userId: yup
+        .string()
+        .required("Invalid userId!")
+        .test('is-mongo-object-id', 'Invalid userId!', value => value == null ? false : isValidObjectId(value)),
 
+        password: yup
+        .string()
+        .trim()
+        .required("Password is missing!")
+        .min(8, "Password is too short!")
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, "Password is too simple!")
+});
