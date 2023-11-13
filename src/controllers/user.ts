@@ -1,6 +1,7 @@
 import { CreateUser, VerifyEmailRequest } from '#/@types/user';
 import { RequestHandler } from 'express';
 import User from '#/models/user';
+import jwt from 'jsonwebtoken'
 import { sendForgetPasswordLink, sendPassResetSuccessEmail, sendVerificationMail } from '#/utils/mail';
 import { generateToken } from '#/utils/helpers';
 import EmailVerificationToken from '#/models/emailVerificationToken';
@@ -8,7 +9,7 @@ import { isValidObjectId } from 'mongoose';
 import passwordResetToken from '#/models/passwordResetToken';
 
 import crypto from 'crypto'
-import { PASSWORD_RESET_LINK } from '#/utils/variables';
+import { JWT_SECRET, PASSWORD_RESET_LINK } from '#/utils/variables';
 
 
 export const create: RequestHandler = async (req, res) => {
@@ -118,20 +119,52 @@ export const grantValid: RequestHandler = async (req, res) => {
 };
 
 export const updatePassword: RequestHandler = async (req, res) => {
-    const {password, userId} = req.body
+    const { password, userId } = req.body
 
-    const user = await  User.findById(userId)
-    if(!user) return res.status(403).json({error: "Unauthorized access"})
+    const user = await User.findById(userId)
+    if (!user) return res.status(403).json({ error: "Unauthorized access" })
 
     const matched = await user.comparePassword(password)
-    if(matched) return res.status(422).json({error: "The new password must be different!"})
+    if (matched) return res.status(422).json({ error: "The new password must be different!" })
 
-    user.password = password 
+    user.password = password
     await user.save()
 
-    passwordResetToken.findOneAndDelete({owner: user._id})
+    passwordResetToken.findOneAndDelete({ owner: user._id })
     //send the success email
 
     sendPassResetSuccessEmail(user.name, user.email)
-    res.json({message: "Password resets successfully."})
+    res.json({ message: "Password resets successfully." })
+};
+
+
+export const signIn: RequestHandler = async (req, res) => {
+    const { password, email } = req.body
+
+    const user = await User.findOne({
+        email
+    })
+    if (!user) return res.status(403).json({ error: "Email/Password mismatch!" })
+
+    //comare the password
+    const matched = await user.comparePassword(password)
+    if (!matched) return res.status(403).json({ error: "Email/Password mismatch!" })
+
+    //generate the token for later use.
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET)
+    user.tokens.push(token)
+
+    await user.save()
+
+    res.json({ profile: { 
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+        avatar: user.avatar?.url,
+        followers: user.followers.length,
+        following: user.followings.length
+     },
+    token
+ })
 };
