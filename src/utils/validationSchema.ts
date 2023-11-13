@@ -44,6 +44,6 @@ export const updatePasswordSchema = yup.object().shape({
         .string()
         .trim()
         .required("Password is missing!")
-        .min(8, "Password is too short!")
+        .min(6, "Password is too short!")
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/, "Password is too simple!")
 });
