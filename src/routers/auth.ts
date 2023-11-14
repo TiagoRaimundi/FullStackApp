@@ -23,7 +23,8 @@ router.post('/sign-in', validate(SignInValidationSchema), signIn)
 router.get('/is-auth', mustAuth, (req, res)=>{
     
     res.json({
-        profile: req.user, })
+        profile: req.user,
+     })
  
 })
 

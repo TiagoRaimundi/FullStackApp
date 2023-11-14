@@ -4,6 +4,8 @@ import { JWT_SECRET } from "#/utils/variables";
 import { RequestHandler } from "express";
 import { JwtPayload, verify } from "jsonwebtoken";
 
+
+
 export const isValidPassResetToken: RequestHandler = async (req, res, next) => {
     const { token, userId } = req.body
 
@@ -30,17 +32,17 @@ export const mustAuth: RequestHandler = async(req, res, next) => {
     const id = payload.userId
 
     const user = await User.findOne({_id: id, tokens: token})
-    if(!user) return res.status(403).json({error: "Unauthorized request!"})
+    if(!user) return res.status(403).json({error: "Unauthorized request!"});
 
-    req.user =  { 
+    req.user = {
         id: user._id,
         name: user.name,
         email: user.email,
         verified: user.verified,
         avatar: user.avatar?.url,
         followers: user.followers.length,
-        following: user.followings.length
-     }
+        followings: user.followings.length,
+    }
     next()
  
 }
