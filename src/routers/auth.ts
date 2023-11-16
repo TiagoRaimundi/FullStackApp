@@ -2,7 +2,7 @@
 import { Router, Request, Response } from 'express';
 import { CreateUserSchema, SignInValidationSchema, TokenAndIDValidation, updatePasswordSchema } from '../utils/validationSchema';
 import { validate } from '#/middleware/validator';
-import { create, generateForgetPasswordLink, grantValid, sendProfile, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/auth';
+import { create, generateForgetPasswordLink, grantValid, logOut, sendProfile, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/auth';
 import { isValidPassResetToken, mustAuth } from '#/middleware/auth';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '#/utils/variables';
@@ -21,7 +21,7 @@ router.post('/update-password', validate(updatePasswordSchema), isValidPassReset
 router.post('/sign-in', validate(SignInValidationSchema), signIn)
 router.get('/is-auth', mustAuth, sendProfile)
 
-
 router.post("/update-profile",mustAuth, fileParser, updateProfile)
-  
+router.post("/log-out", mustAuth, logOut)
+
 export default router;

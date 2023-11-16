@@ -4,8 +4,6 @@ import { JWT_SECRET } from "#/utils/variables";
 import { RequestHandler } from "express";
 import { JwtPayload, verify } from "jsonwebtoken";
 
-
-
 export const isValidPassResetToken: RequestHandler = async (req, res, next) => {
     const { token, userId } = req.body
 
@@ -19,8 +17,6 @@ export const isValidPassResetToken: RequestHandler = async (req, res, next) => {
     next()
 
 }
-
-
 
 export const mustAuth: RequestHandler = async(req, res, next) => {
     const {authorization} = req.headers
@@ -43,6 +39,7 @@ export const mustAuth: RequestHandler = async(req, res, next) => {
         followers: user.followers.length,
         followings: user.followings.length,
     }
+    req.token = token
     next()
  
 }

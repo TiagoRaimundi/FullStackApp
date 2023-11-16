@@ -157,54 +157,72 @@ export const signIn: RequestHandler = async (req, res) => {
 
     await user.save()
 
-    res.json({ profile: { 
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        verified: user.verified,
-        avatar: user.avatar?.url,
-        followers: user.followers.length,
-        following: user.followings.length
-     },
-    token
- })
+    res.json({
+        profile: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            verified: user.verified,
+            avatar: user.avatar?.url,
+            followers: user.followers.length,
+            following: user.followings.length
+        },
+        token
+    })
 };
 export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) => {
- const {name} = req.body
- const avatar = req.files?.avatar as formidable.File
+    const { name } = req.body
+    const avatar = req.files?.avatar as formidable.File
 
- const user = await User.findById(req.user.id)
- if(!user) throw new Error("Something went wrong, user not found!")
+    const user = await User.findById(req.user.id)
+    if (!user) throw new Error("Something went wrong, user not found!")
 
- if(typeof name !== "string") return res.status(422).json({error: "Invalid name"})
+    if (typeof name !== "string") return res.status(422).json({ error: "Invalid name" })
 
- if(name.trim().length < 3) return res.status(422).json({error: "Invalid name!"})
+    if (name.trim().length < 3) return res.status(422).json({ error: "Invalid name!" })
 
- user.name = name
+    user.name = name
 
- if(avatar){
-    // if there is already an avatar file, we want to remove that
-    if(user.avatar?.publicId){
-        await cloudinary.uploader.destroy(user.avatar?.publicId)
+    if (avatar) {
+        // if there is already an avatar file, we want to remove that
+        if (user.avatar?.publicId) {
+            await cloudinary.uploader.destroy(user.avatar?.publicId)
+        }
+
+
+        //upload new avatar file
+        const { secure_url, public_id } = await cloudinary.uploader.upload(avatar.filepath, {
+            width: 300,
+            height: 300,
+            crop: "thumb",
+            gravity: "face"
+        })
+        user.avatar = { url: secure_url, publicId: public_id }
     }
 
+    await user.save()
+    res.json({ profile: formatProfile(user) })
 
-    //upload new avatar file
-    const {secure_url, public_id} = await cloudinary.uploader.upload(avatar.filepath, {
-        width: 300,
-        height: 300,
-        crop: "thumb",
-        gravity: "face"
-    })
-    user.avatar = {url: secure_url, publicId: public_id}
- }
-
- await user.save()
- res.json({ profile: formatProfile(user) })
-
- req.user.id
+    req.user.id
 };
 
 export const sendProfile: RequestHandler = (req, res) => {
-    res.json({profile: req.user})
+    res.json({ profile: req.user })
+}
+
+export const logOut: RequestHandler = async (req, res) => {
+    const { fromAll } = req.query
+
+    const token = req.token
+    const user = await User.findById(req.user.id)
+    if (!user) throw new Error("Something went wrong, user not found!")
+
+    //logout from all
+    if (fromAll === "yes") user.tokens = []
+    else user.tokens = user.tokens.filter((t) => t !== token)
+
+    await user.save()
+    res.json({ success: true })
+
+
 }
