@@ -3,11 +3,10 @@ import { RequestHandler } from 'express';
 import User from '#/models/user';
 import jwt from 'jsonwebtoken'
 import { sendForgetPasswordLink, sendPassResetSuccessEmail, sendVerificationMail } from '#/utils/mail';
-import { generateToken } from '#/utils/helpers';
+import { formatProfile, generateToken } from '#/utils/helpers';
 import EmailVerificationToken from '#/models/emailVerificationToken';
 import { isValidObjectId } from 'mongoose';
 import passwordResetToken from '#/models/passwordResetToken';
-
 import crypto from 'crypto'
 import { JWT_SECRET, PASSWORD_RESET_LINK } from '#/utils/variables';
 import { RequestWithFiles } from '#/middleware/fileParser';
@@ -201,7 +200,11 @@ export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) 
  }
 
  await user.save()
- res.json({avatar: user.avatar})
+ res.json({ profile: formatProfile(user) })
 
  req.user.id
 };
+
+export const sendProfile: RequestHandler = (req, res) => {
+    res.json({profile: req.user})
+}
