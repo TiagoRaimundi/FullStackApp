@@ -10,7 +10,9 @@ import passwordResetToken from '#/models/passwordResetToken';
 
 import crypto from 'crypto'
 import { JWT_SECRET, PASSWORD_RESET_LINK } from '#/utils/variables';
-
+import { RequestWithFiles } from '#/middleware/fileParser';
+import cloudinary from '#/cloud';
+import formidable from 'formidable';
 
 export const create: RequestHandler = async (req, res) => {
     const { email, password, name } = req.body;
@@ -167,4 +169,36 @@ export const signIn: RequestHandler = async (req, res) => {
      },
     token
  })
+};
+export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) => {
+ const {name} = req.body
+ const avatar = req.files?.avatar as formidable.File
+
+ const user = await User.findById(req.user.id)
+ if(!user) throw new Error("Something went wrong, user not found!")
+
+ if(typeof name !== "string") return res.status(422).json({error: "Invalid name"})
+
+ if(name.trim().length < 3) return res.status(422).json({error: "Invalid name!"})
+
+ user.name = name
+
+ if(avatar){
+    // if there is already an avatar file, we want to remove that
+
+
+    //upload new avatar file
+    const {secure_url, public_id} = await cloudinary.uploader.upload(avatar.filepath, {
+        width: 300,
+        height: 300,
+        crop: "thumb",
+        gravity: "face"
+    })
+    user.avatar = {url: secure_url, publicId: public_id}
+ }
+
+ await user.save()
+ res.json({avatar: user.avatar})
+
+ req.user.id
 };

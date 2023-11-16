@@ -2,7 +2,7 @@
 import { Router, Request, Response } from 'express';
 import { CreateUserSchema, SignInValidationSchema, TokenAndIDValidation, updatePasswordSchema } from '../utils/validationSchema';
 import { validate } from '#/middleware/validator';
-import { create, generateForgetPasswordLink, grantValid, sendReVerificationToken, signIn, updatePassword, verifyEmail } from '#/controllers/user';
+import { create, generateForgetPasswordLink, grantValid, sendReVerificationToken, signIn, updatePassword, updateProfile, verifyEmail } from '#/controllers/user';
 import { isValidPassResetToken, mustAuth } from '#/middleware/auth';
 import { JwtPayload, verify } from 'jsonwebtoken';
 import { JWT_SECRET } from '#/utils/variables';
@@ -24,16 +24,11 @@ router.get('/is-auth', mustAuth, (req, res)=>{
      })
 })
 
-
-
 import formidable from 'formidable';
 import path from 'path'
 import fs from 'fs'
 import fileParser, { RequestWithFiles } from '#/middleware/fileParser';
 
-router.post("/update-profile", fileParser, (req: RequestWithFiles, res) => {
-    console.log(req.files)
-    res.json({ok: true})
-})
+router.post("/update-profile",mustAuth, fileParser, updateProfile)
   
 export default router;
