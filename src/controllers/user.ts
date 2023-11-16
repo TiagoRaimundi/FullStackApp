@@ -185,6 +185,9 @@ export const updateProfile: RequestHandler = async (req: RequestWithFiles, res) 
 
  if(avatar){
     // if there is already an avatar file, we want to remove that
+    if(user.avatar?.publicId){
+        await cloudinary.uploader.destroy(user.avatar?.publicId)
+    }
 
 
     //upload new avatar file
