@@ -1,63 +1,64 @@
-import { categories, categoriesTypes } from "#/utils/audio_category"
-import { Model, ObjectId, Schema, models, model } from "mongoose"
+import { categories, categoriesTypes } from "#/utils/audio_category";
+import { Model, models, model, ObjectId, Schema } from "mongoose";
 
-
-
-export interface AudioDocument{
-    title: string
-    about: string
-    owner: ObjectId
-    file: {
-        url: string
-        publicId: string
-    }
-    poster?: {
-        url: string
-        publicId: string
-    }
-    likes: ObjectId[]
-    category: categoriesTypes
+export interface AudioDocument {
+  title: string;
+  about: string;
+  owner: ObjectId;
+  file: {
+    url: string;
+    publicId: string;
+  };
+  poster?: {
+    url: string;
+    publicId: string;
+  };
+  likes: ObjectId[];
+  category: categoriesTypes;
 }
 
-const AudioSchema = new Schema<AudioDocument>({
+const AudioSchema = new Schema<AudioDocument>(
+  {
     title: {
-        type: String, 
-        required: true
+      type: String,
+      required: true,
     },
     about: {
-        type: String, 
-        required: true
+      type: String,
+      required: true,
     },
     owner: {
-        type: Schema.Types.ObjectId, 
-        ref: "User"
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
     file: {
-        type: Object,
-        url: String,
-        publicId: String,
-        required: true
+      type: Object,
+      url: String,
+      publicId: String,
+      required: true,
     },
     poster: {
-        type: Object,
-        url: String,
-        publicId: String
-        
+      type: Object,
+      url: String,
+      publicId: String,
     },
-    likes:[{
+    likes: [
+      {
         type: Schema.Types.ObjectId,
-        ref: "User"
-    }],
-    category:{
-        type: String,
-        enum: categories,
-        default: 'Others'
-    }
-}, {
-    timestamps: true
-})
+        ref: "User",
+      },
+    ],
+    category: {
+      type: String,
+      enum: categories,
+      default: "Others",
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-const Audio = models.Audio || model("Audio", AudioSchema)
+const Audio = models.Audio || model("Audio", AudioSchema);
 
-export default Audio as Model<AudioDocument>
-
+export default Audio as Model<AudioDocument>;
