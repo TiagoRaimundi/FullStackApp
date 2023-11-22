@@ -1,5 +1,7 @@
-import Audio from "#/models/audio";
+import { PopulateFavList } from "#/@types/audio";
+import Audio, { AudioDocument } from "#/models/audio";
 import Favorite from "#/models/favorite";
+import { error } from "console";
 import { RequestHandler } from "express";
 import { isValidObjectId } from "mongoose";
 
@@ -54,4 +56,31 @@ export const toggleFavorite: RequestHandler = async (req, res) => {
 
 
     res.json({ status })
+}
+
+export const getFavorite: RequestHandler = async (req, res) => {
+   const  userID = req.user.id
+
+   const favorite = await Favorite.findOne({ owner: userID })
+   .populate<{items: PopulateFavList[]}>({
+    path: "items",
+    populate: {
+        path: "owner",
+
+    }
+   })
+   if(!favorite) return res.json({audios: []})
+   const audios = favorite.items.map((item) => {
+        return {
+            id: item._id,
+            title: item.title,
+            category: item.category,
+            file: item.file.url,
+            poster: item.poster?.url,
+            owner: {name: item.owner.name, id: item.owner._id},
+        }
+    })
+   res.json( {audios })
+  
+
 }
