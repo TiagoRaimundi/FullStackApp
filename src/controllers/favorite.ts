@@ -84,3 +84,17 @@ export const getFavorite: RequestHandler = async (req, res) => {
   
 
 }
+
+export const getIsFavorite: RequestHandler = async (req, res) => {
+    const  audioId = req.query.audioId as string
+
+    if(!isValidObjectId(audioId)) return res.status(422).json({error: 'Invalid audio id!'})
+ 
+    const favorite = await Favorite.findOne({ 
+        owner: req.user.id,
+        items: audioId })
+    
+    res.json( {result: favorite? true: false })
+   
+ 
+ }
