@@ -6,16 +6,15 @@ interface FavoriteDocument{
     items: ObjectId[]
 }
 
-const favoriteSchema = new Schema<FavoriteDocument>({
-    owner: {
+const favoriteSchema = new Schema<FavoriteDocument>(
+    {
         owner: {
             type: Schema.Types.ObjectId,
             ref: "User"
 
         },
         items: [{type: Schema.Types.ObjectId, ref: "Audio" }]
-    }
-}, {timestamps: true})
+    }, {timestamps: true})
 
 const Favorite = models.Favorite || model("Favorite", favoriteSchema );
 
